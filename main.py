@@ -36,6 +36,8 @@ class CommandLineInterface:
         
         # Welcome message
         self.display_welcome()
+
+        global words
         
     def display_welcome(self):
         welcome_msg = (
@@ -58,6 +60,7 @@ class CommandLineInterface:
         self.display_output(f">>> {command}\n")
         
         # split the input line into several words
+        
         words = [i for i in command.split()]
         
         # commands
@@ -71,10 +74,10 @@ class CommandLineInterface:
                         "exit/quit - to stop the program\n"
                         "ls/cd - not yet implemented\n")
             self.display_output(help_msg)
-        elif (words[0].lower() == 'ls' and len(words)==1):
-            self.display_output(f"The command and arguements: {command}\n")
-        elif (words[0].lower() == 'cd' and len(words)==1):
-            self.display_output(f"The command and arguements: {command}\n")
+        elif (words[0].lower() == 'ls'):
+            self.display_output(f"The command and arguements: {words[0]}, '{words[1:]}'\n")
+        elif (words[0].lower() == 'cd'):
+            self.display_output(f"The command and arguements: {words[0]}, '{words[1:]}'\n")
         else:
             self.display_output(f"Unknown command: {command}\n")
             
@@ -85,7 +88,3 @@ if __name__ == "__main__":
     root = tk.Tk()
     cli = CommandLineInterface(root)
     root.mainloop()
-
-
-
-
