@@ -1,0 +1,6 @@
+help
+ls
+ls a a
+cd a b
+hello_please_stop_executing_it
+cd b b 

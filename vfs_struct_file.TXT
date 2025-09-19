@@ -1,0 +1,7 @@
+MAIN_CAT SUB_CAT_1_office SUB_CAT_2_config SUB_CAT_3_fun SUB_CAT_5
+SUB_CAT_1_office file1.txt file2.pptx
+SUB_CAT_2_config MANUAL.ini HELP.ini
+SUB_CAT_3_fun movie.mp4 music.mp3
+SUB_CAT_5 SUB_SUB_CAT_1 SUB_SUB_CAT_2
+SUB_SUB_CAT_1 what.txt
+SUB_SUB_CAT_2 DOnotREADME.md
