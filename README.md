@@ -6,7 +6,7 @@
 В коде создан класс, в котором идет обработка простейших команд, создание и отрисовка окна для взаимодействия с системой, методы по выводу сообщений от программы.<br>
 В репозитории хранятся стартовые файлы для возможной работы с программой. Среди них конфигурационный файл (config.ini), файл со стартовыми командами (vfs_start_script.txt), файл с организацией файлов виртуальной файловой системы (vfs_struct_file.txt), файл с командами, который не выполнится до конца, так как это продемонстрирует одно из условий задания (vfs_start_script_w_bugs.txt)<br>
 Пожалуйста, храните эти файлы в одной директории с кодом, чтобы не возникло лишних проблем. Если что, Вы были предупреждены :) <br>
-
+При запуске файла для тестов (.bat) удостоверьтесь, что имя файла с кодом соответствует имени файла в тестовом файле. Сделать это возможно через "Блокнот". <br>
 <h2>Методы класса CommandLineInterface</h2>
 
 <ol> 
@@ -66,7 +66,7 @@
 The code contains a class that processes basic commands, creates and draws a window for interacting with the system, and contains methods for displaying program messages.<br>
 The repository contains startup files for running the program. These include the configuration file (config.ini), a file with startup commands (vfs_start_script.txt), a file organizing the virtual file system files (vfs_struct_file.txt), and a file with commands that will not be executed completely due to one of the task conditions (vfs_start_script_w_bugs.txt).<br>
 Please store these files in the same directory as the code to avoid unnecessary problems. Just in case, you've been warned :) <br>
-
+When running a test file (.bat), make sure the code file name matches the file name in the test file. You can do this using Notepad.<br>
 <h2>CommandLineInterface Class Methods</h2>
 
 <ol>
