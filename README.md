@@ -115,8 +115,7 @@
 
 
 
-# Configuration_Management_3Sem
-<hr>
+
 
 <h2>Brief Description</h2>
 
