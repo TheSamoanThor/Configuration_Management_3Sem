@@ -4,6 +4,8 @@
 <br>
 В репозитории хранятся стартовые файлы для возможной работы с программой. Среди них конфигурационные файлы (config2task.ini и config3task.ini), файл со стартовыми командами (vfs_start_script.txt), файл с организацией файлов виртуальной файловой системы (vfs_struct_file.txt), файл с командами, который не выполнится до конца, так как это продемонстрирует одно из условий задания (vfs_start_script_w_bugs.txt), файл для 3 задачи с структурой vfs (vfs.json), файл для создания vfs.json (json_former.py), файлы для теста кода (TESTS_task_2.bat и TESTS_task_3.bat).
 <br>
+Для тестов 4 задания пользоваться файлами 3 задачи
+<br>
 Пожалуйста, храните эти файлы в одной директории с кодом, чтобы не возникло лишних проблем. Если что, Вы были предупреждены :)
 <br>
 При запуске файла для тестов (.bat) удостоверьтесь, что имя файла с кодом соответствует имени файла в тестовом файле. Сделать это возможно через "Блокнот".
@@ -139,6 +141,8 @@
 The code creates a class that processes basic commands, creates and draws a window for interacting with the system, and contains methods for displaying program messages.
 <br>
 The repository stores startup files for running the program. These include configuration files (config2task.ini and config3task.ini), a file with startup commands (vfs_start_script.txt), a file with the virtual file system file structure (vfs_struct_file.txt), a file with commands that will not be executed to completion because one of the task conditions demonstrates this (vfs_start_script_w_bugs.txt), a file for task 3 with the vfs structure (vfs.json), a file for creating vfs.json (json_former.py), and files for testing the code (TESTS_task_2.bat and TESTS_task_3.bat).
+<br>
+Please, use files of the 3rd task to test the 4th task.
 <br>
 Please keep these files in the same directory as your code to avoid any problems. You've been warned :)
 <br>
