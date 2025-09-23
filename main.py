@@ -320,15 +320,101 @@ class CommandLineInterface:
         for command in commands:
             command = command.strip()
             if command:
-                self.execute_command(start_script=True, command=command)
+                # copied from exec method
+                
+                # Display the command
+                self.display_output(f">>> {command}\n")
+                
+                # split the input line into several words
+                words = [i for i in command.split()]
+                
+                # commands
+                if (command == ''):
+                    pass
+                
+                elif (words[0].lower() in ['exit', 'quit']):
+                    self.display_output("Exiting...\n")
+                    self.root.after(1000, self.root.destroy)
+                    
+                elif (words[0].lower() == "help" and len(words)==1):
+                    help_msg = ("help - to see this message\n"+
+                                "exit/quit - to stop the program\n"+
+                                "ls [path] [--a] - list directory contents, --a for more info about files in catalogue\n"+
+                                "cd <path> - change directory\n"+
+                                "find <pattern> - search files and directories with included pattern\n"+
+                                "display_short_path [false] - toggle path display\n"+
+                                "who - show user and terminal info\n"+
+                                "read <file> - get data from file\n")
+                    self.display_output(help_msg)
+                    
+                elif (words[0].lower() == 'ls'):
+                    if ('--a' in words):
+                        result = self.vfs.list_dir(command[command.find(' '):].strip(), "--a")           
+                    else:
+                        result = self.vfs.list_dir(command[command.find(' '):].strip())
+                        
+                    if isinstance(result, list): # if result.type() == list
+                        for name, type_ in result:
+                            self.display_output(f"{name} ({type_})\n")
+                    else:
+                        self.display_output(f"{result}\n")
+                
+                elif (words[0].lower() == 'read'):
+                    self.display_output(f"{self.vfs.read_file(command[command.find(' '):])}\n")
+                    
+                elif (words[0].lower() == 'cd'):
+                    path = command[command.find(' '):].strip()
+                    new_dir = self.vfs.navigate(path)
+                    
+                    if new_dir and new_dir.type == 'directory':
+                        self.vfs.current_dir = new_dir
+                        self.display_output(f"Changed directory to {new_dir.get_path(self.vfs.root_name)}\n")
+                    else:
+                        self.display_output(f"Directory not found: {path}\n")
+                    
+                    # ОБНОВЛЯЕМ ПРОМПТ ПОСЛЕ СМЕНЫ ДИРЕКТОРИИ
+                    self.update_prompt()
+                
+                elif (words[0].lower() == 'display_short_path'):
+                    if ('false' in words):
+                        self.update_prompt(False)
+                        self.display_output(f"The output changed \n")
+                    else:
+                        self.update_prompt()
+                        self.display_output(f"The output changed \n")
+                
+                elif (words[0].lower() == 'who'):
+                    self.display_output(f"Current user: {os.getlogin()} \n"
+                                        + f"Current terminal: CMD ANALOG \n"
+                                        + f"Time of accessing this terminal: {self.creation_time} \n"
+                                        + f"Time of using this terminal: {datetime.now() - self.creation_time} \n")
+                
+                elif (words[0].lower() == 'find'):
+                    if len(words) > 1:
+                        pattern = ' '.join(words[1:])
+                        results = self.vfs.find(pattern)
+                        if results:
+                            for result in results:
+                                self.display_output(f"{result}\n")
+                        else:
+                            self.display_output("No files or directories found\n")
+                    else:
+                        self.display_output("Usage: find <pattern>\n")
+                    
+                else:
+                    # stop executing in case of some troubles, as it is in the task
+                    self.display_output(f"Unknown command: {command}, the following start script cannot be done\n")
+                    return
+                        
+                words = []
                 
 
 
     def execute_command(self, event=None, start_script = False, command = ""):
         # get command and clear the field
-        if (not(start_script)):
-            command = self.input_field.get().strip()
-            self.input_field.delete(0, tk.END)
+        
+        command = self.input_field.get().strip()
+        self.input_field.delete(0, tk.END)
         
         # Display the command
         self.display_output(f">>> {command}\n")
@@ -409,11 +495,7 @@ class CommandLineInterface:
             else:
                 self.display_output("Usage: find <pattern>\n")
             
-        else:
-            if start_script: # stop executing in case of some troubles, as it is in the task
-                self.display_output(f"Unknown command: {command}, the following start script cannot be done\n")
-                return
-                
+        else:               
             self.display_output(f"Unknown command: {command}\n")
         
         words = []
@@ -449,6 +531,7 @@ def parse_config_file(config_path):
     config = configparser.ConfigParser()
     vfs_path = None
     script_path = None
+    root_name = "MAIN_CAT"
     
     if os.path.exists(config_path):
         config.read(config_path)
@@ -483,3 +566,10 @@ if __name__ == "__main__":
     root = tk.Tk()
     cli = CommandLineInterface(root, vfs_path, script_path, args.config, root_name)
     root.mainloop()
+
+    
+        
+    
+
+
+
