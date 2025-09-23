@@ -5,8 +5,14 @@ import argparse # to get args from the original cmd
 import configparser # to read configs
 import json
 import base64
+from datetime import datetime
 
 
+
+global dict_all_nodes
+dict_all_nodes = {}
+        
+        
 
 class VFSNode:
 #     __slots__ = ('name', 'type', 'content', 'children', 'parent', 'metadata', 'path')       
@@ -14,9 +20,10 @@ class VFSNode:
         
         self.name = node_data['name']
         self.type = node_data['type']
-        self.path = node_data['path']
         self.parent = None
         self.children = {}
+#         "path": "/SUB_CAT_3_fun/music.mp3",
+        self.path = ""
         
         if ('encoding' in node_data):
             self.encoding = node_data['encoding']
@@ -27,7 +34,7 @@ class VFSNode:
             if self.encoding == 'base64': # decode if encoded
                 self.content = base64.b64decode(node_data['content']).decode('utf-8')
             else:
-                self.content = node_data['content'].decode('utf-8')
+                self.content = node_data['content']
         else:
             self.content = None
             
@@ -45,20 +52,21 @@ class VFSNode:
         
         
         
-    def get_path(self):
+    def get_path(self, root_name = "MAIN_CAT"):
         if (not(self.path)):
             path = []
             current = self
             while current:
-                path.append(current.name)
+                if (current.name!=root_name):
+                    path.append(current.name)
                 current = current.parent
-            return '/'.join(reversed(path))
+            return "/"+'/'.join(reversed(path))
         return self.path
     
     
     
     def display_data(self):
-        print(f"Data: \n"+
+        return(f"Data: \n"+
               f"name = {self.name}\n"+
               f"type = {self.type}\n"+
               f"path = {self.path}\n"+
@@ -70,47 +78,137 @@ class VFSNode:
        
        
 class VFS:
-    def __init__(self, vfs_path):
+    def __init__(self, vfs_path, root_name="MAIN_CAT"):
+        self.root_name = root_name
         self.root = self.load_vfs_from_json(vfs_path)
-               
+        self.current_dir = self.root
+        
         
         
     def load_vfs_from_json(self, json_path):
         with open(json_path, 'r', encoding='utf-8') as f:
             vfs_data = json.load(f)
-                
-        # Создаем корневой узел VFS
         return self.build_vfs_tree(vfs_data)
     
-
-
+    
+    
     def build_vfs_tree(self, node_data, parent=None):
-               
-        if node_data['type'] == 'directory':
-            # Создаем узел директории
-            node = VFSNode(node_data)
-            if parent:
-                parent.add_child(node)
+        node = VFSNode(node_data)
+        
+        if parent:
+            parent.add_child(node)
+        
+        # Устанавливаем путь
+        if 'path' in node_data:
+            node.path = node_data['path']
+        else:
+            node.path = node.get_path(self.root_name)
+        
+        # Сохраняем узел в словарь с полным путем как ключом
+        dict_all_nodes[node.path] = node
+        
+        # Рекурсивно обрабатываем детей для директорий
+        if node.type == 'directory' and 'children' in node_data:
+            for child_data in node_data['children']:
+                self.build_vfs_tree(child_data, node)
+        
+        return node
+    
+    
+    
+    def navigate(self, path):
+        # Навигация по пути
+        if not path or path == '.':
+            return self.current_dir
+                
+        path = path.strip()
+        
+        if path == root_name:
+            path = "/"
+        
+        # Абсолютный путь
+        if path.startswith('/'):
+            target_path = path
+        else:
+            # Относительный путь
+            current_path = self.current_dir.get_path(self.root_name)
+            target_path = current_path.rstrip('/') + '/' + path
+        
+        # Нормализуем путь
+        target_path = '/'.join(part for part in target_path.split('/') if part)
+        target_path = '/' + target_path
+        
+        # Особые случаи
+        if path == '..':
+            if self.current_dir.parent:
+                return self.current_dir.parent
+            return self.current_dir
+        
+        # Ищем путь в словаре
+        if target_path in dict_all_nodes:
+            return dict_all_nodes[target_path]
+        
+        return None
+    
+    
+    
+    def list_dir(self, path='', modificator = ""):
+        target_dir = self.navigate(path)
+                    
+        if not target_dir:
+            target_dir = self.current_dir
+        
+        if target_dir.type != 'directory':
+            return f"It is a file: {path}"
+        
+        if (modificator == '--a'):
+            result = []
+            if target_dir.parent:  # Добавляем родительскую директорию если не корень
+                result.append(('..', 'directory'))
             
-            # Рекурсивно обрабатываем дочерние элементы
-            if 'children' in node_data:
-                for child_data in node_data['children']:
-                    self.build_vfs_tree(child_data, node)
-            node.display_data()
-            return node
+            for name, node in target_dir.children.items():
+                result.append((name, node.display_data()))
+        else:
+            result = []
+            if target_dir.parent:  # Добавляем родительскую директорию если не корень
+                result.append(('..', 'directory'))
             
-        elif node_data['type'] == 'file':
-            # Создаем узел файла
-            node = VFSNode(node_data)
-            if parent:
-                parent.add_child(node)
-            node.display_data()
-            return node
+            for name, node in target_dir.children.items():
+                result.append((name, node.type))
+        
+        return result
+    
+    
+    
+    def read_file(self, path):
+        target_file = self.navigate(path)
+        if not target_file:
+            return f"File not found: {path}"
+        
+        if target_file.type != 'file':
+            return f"It is a directory: {path}"
+            
+        return target_file.content
+    
+    
+    def find(self, pattern):
+        results = []
+        
+        if (pattern == "/"):
+            return ['/']
+        
+        for path, node in dict_all_nodes.items():
+            if pattern.lower() in node.name.lower():
+                results.append(path)
+        
+        return results
     
     
 
 class CommandLineInterface:
-    def __init__(self, root, vfs_path, script_path, config_path):
+    def __init__(self, root, vfs_path, script_path, config_path, root_name):
+        self.creation_time = datetime.now()
+        
         # Create window + its name
         self.root = root
         self.root.title("CMD ANALOG")
@@ -133,12 +231,13 @@ class CommandLineInterface:
         # Create the input field + position it
         self.input_frame = tk.Frame(root, bg='black')
         self.input_frame.pack(fill=tk.X, padx=5, pady=5)
-                
+                        
         # to get curr dir and show it near input field, must be updated to show location in VFS
-        self.prompt = tk.Label(self.input_frame, text=f"{os.getcwd()}>>> ",
+        self.current_vfs_path = "/"  # Начинаем с корня VFS
+        self.prompt = tk.Label(self.input_frame, text=f"{self.get_current_prompt()}>>> ",
             bg='black', fg='white', font=('Courier', 12))
         self.prompt.pack(side=tk.LEFT)
-               
+                
         self.input_field = tk.Entry( #command input field
             self.input_frame, bg='black', fg='white', 
             insertbackground='white', font=('Courier', 12), relief=tk.FLAT)
@@ -149,11 +248,12 @@ class CommandLineInterface:
         #get vfs
         self.vfs = None
         if vfs_path and os.path.exists(vfs_path):
-            self.vfs = VFS(vfs_path)
+            self.vfs = VFS(vfs_path, root_name)
         else:
             self.vfs = None
             self.display_output("VFS не загружена: файл не найден или путь не указан\n")
         self.vfs_exists = (self.vfs!=None)  
+        self.update_prompt()
         
         # Welcome and about config messages
         self.display_welcome()
@@ -190,8 +290,28 @@ class CommandLineInterface:
         self.output_area.insert(tk.END, text) # Inserts text at the end
         self.output_area.see(tk.END) # Scrolls to the end to show the new text
         self.output_area.config(state=tk.DISABLED) # Disables the text widget again        
+    
+    
+    def get_current_prompt(self, not_show_all_path = True):
+        try:
+            if self.vfs_exists and self.vfs:
+                # Получаем текущий путь из VFS
+                current_path = self.vfs.current_dir.get_path(self.vfs.root_name)
+                if not_show_all_path:
+                    return current_path if current_path != "" else "/"
+                return str(os.getcwd())+'/'+self.vfs_path+(current_path if current_path != "" else "/")
+            
+        except AttributeError: # костыль. Работает в период от инициализации окна cmd до момента инициализации vfs
+            # Fallback на реальную файловую систему
+            return str(os.getcwd())
+    
+    
+    
+    def update_prompt(self, not_show_all_path = True):
+        new_prompt = self.get_current_prompt(not_show_all_path)
+        self.prompt.config(text=f"{new_prompt}>>> ")
         
-
+    
 
     def execute_start_script(self):
         with open(self.script_path, 'r') as script_file:
@@ -200,68 +320,102 @@ class CommandLineInterface:
         for command in commands:
             command = command.strip()
             if command:
-                # just copied the following code from execute_command(self, event)
-                # Display the command
-                self.display_output(f">>> {command}\n")
-                
-                # split the input line into several words
-                
-                words = [i for i in command.split()]
-                
-                # commands
-                if (command == ''):
-                    pass
-                elif (words[0].lower() in ['exit', 'quit']): # lower - get NON-CAPS version of command
-                    self.display_output("Exiting...\n")
-                    self.root.after(1000, self.root.destroy)
-                elif (words[0].lower() == "help" and len(words)==1):
-                    help_msg = ("help - to see this message\n"
-                                "exit/quit - to stop the program\n"
-                                "ls/cd - not yet implemented\n")
-                    self.display_output(help_msg)
-                elif (words[0].lower() == 'ls'):
-                    self.display_output(f"The command and arguements: {words[0]}, '{words[1:]}'\n")
-                elif (words[0].lower() == 'cd'):
-                    self.display_output(f"The command and arguements: {words[0]}, '{words[1:]}'\n")
-                else:
-                    self.display_output(f"Unknown command: {command}, the following start script cannot be done")
-                    return
-                # stop executing in case of some troubles, as it is in the task
-                    
-                words = []
+                self.execute_command(start_script=True, command=command)
                 
 
 
-    def execute_command(self, event):
+    def execute_command(self, event=None, start_script = False, command = ""):
         # get command and clear the field
-        command = self.input_field.get().strip()
-        self.input_field.delete(0, tk.END)
+        if (not(start_script)):
+            command = self.input_field.get().strip()
+            self.input_field.delete(0, tk.END)
         
         # Display the command
         self.display_output(f">>> {command}\n")
         
         # split the input line into several words
-        
         words = [i for i in command.split()]
         
         # commands
         if (command == ''):
             pass
-        elif (words[0].lower() in ['exit', 'quit']): # lower - get NON-CAPS version of command
+        
+        elif (words[0].lower() in ['exit', 'quit']):
             self.display_output("Exiting...\n")
             self.root.after(1000, self.root.destroy)
-        elif (words[0].lower() == "help" and len(words)==1):
-            help_msg = ("help - to see this message\n"
-                        "exit/quit - to stop the program\n"
-                        "ls/cd - not yet implemented\n")
-            self.display_output(help_msg)
-        elif (words[0].lower() == 'ls'):
-            self.display_output(f"The command and arguements: {words[0]}, '{words[1:]}'\n")
-        elif (words[0].lower() == 'cd'):
-            self.display_output(f"The command and arguements: {words[0]}, '{words[1:]}'\n")
-        else:
-            self.display_output(f"Unknown command: {command}\n")
             
+        elif (words[0].lower() == "help" and len(words)==1):
+            help_msg = ("help - to see this message\n"+
+                        "exit/quit - to stop the program\n"+
+                        "ls [path] [--a] - list directory contents, --a for more info about files in catalogue\n"+
+                        "cd <path> - change directory\n"+
+                        "find <pattern> - search files and directories with included pattern\n"+
+                        "display_short_path [false] - toggle path display\n"+
+                        "who - show user and terminal info\n"+
+                        "read <file> - get data from file\n")
+            self.display_output(help_msg)
+            
+        elif (words[0].lower() == 'ls'):
+            if ('--a' in words):
+                result = self.vfs.list_dir(command[command.find(' '):].strip(), "--a")           
+            else:
+                result = self.vfs.list_dir(command[command.find(' '):].strip())
+                
+            if isinstance(result, list): # if result.type() == list
+                for name, type_ in result:
+                    self.display_output(f"{name} ({type_})\n")
+            else:
+                self.display_output(f"{result}\n")
+        
+        elif (words[0].lower() == 'read'):
+            self.display_output(f"{self.vfs.read_file(command[command.find(' '):])}\n")
+            
+        elif (words[0].lower() == 'cd'):
+            path = command[command.find(' '):].strip()
+            new_dir = self.vfs.navigate(path)
+            
+            if new_dir and new_dir.type == 'directory':
+                self.vfs.current_dir = new_dir
+                self.display_output(f"Changed directory to {new_dir.get_path(self.vfs.root_name)}\n")
+            else:
+                self.display_output(f"Directory not found: {path}\n")
+            
+            # ОБНОВЛЯЕМ ПРОМПТ ПОСЛЕ СМЕНЫ ДИРЕКТОРИИ
+            self.update_prompt()
+        
+        elif (words[0].lower() == 'display_short_path'):
+            if ('false' in words):
+                self.update_prompt(False)
+                self.display_output(f"The output changed \n")
+            else:
+                self.update_prompt()
+                self.display_output(f"The output changed \n")
+        
+        elif (words[0].lower() == 'who'):
+            self.display_output(f"Current user: {os.getlogin()} \n"
+                                + f"Current terminal: CMD ANALOG \n"
+                                + f"Time of accessing this terminal: {self.creation_time} \n"
+                                + f"Time of using this terminal: {datetime.now() - self.creation_time} \n")
+        
+        elif (words[0].lower() == 'find'):
+            if len(words) > 1:
+                pattern = ' '.join(words[1:])
+                results = self.vfs.find(pattern)
+                if results:
+                    for result in results:
+                        self.display_output(f"{result}\n")
+                else:
+                    self.display_output("No files or directories found\n")
+            else:
+                self.display_output("Usage: find <pattern>\n")
+            
+        else:
+            if start_script: # stop executing in case of some troubles, as it is in the task
+                self.display_output(f"Unknown command: {command}, the following start script cannot be done\n")
+                return
+                
+            self.display_output(f"Unknown command: {command}\n")
+        
         words = []
     
 
@@ -273,9 +427,10 @@ def parse_arguments():
                 help='Path to VFS physical location, preferable to place this file in the same directory as this code file')
     parser.add_argument('--script', type=str,
                 help='Path to startup script, preferable to place this file in the same directory as this code file')
-    parser.add_argument('--config', type=str, default='config.ini',
-                help='Path to config file (default: config.ini). Please, place config.ini and the default files in the same directory as this code file')
-    
+    parser.add_argument('--config', type=str, default='config4task.ini',
+                help='Path to config file (default: config4task.ini). Please, place config3task.ini and the default files in the same directory as this code file')
+    parser.add_argument('--root_name', type=str,
+                help='Name of the root in vfs, default: "MAIN_CAT"')
     # arguements: (key for search of the arg, type of this arg, the message we get in case of typing "python main.py --help")
     
     return parser.parse_args()
@@ -287,9 +442,9 @@ def parse_config_file(config_path):
     # struct:
     #
     # [DEFAULT]
-    # vfs_path = vfs_struct_file.txt
+    # vfs_path = vfs.json
     # script_path = vfs_start_script.txt
-    #
+    # root_name = MAIN_CAT
         
     config = configparser.ConfigParser()
     vfs_path = None
@@ -302,15 +457,17 @@ def parse_config_file(config_path):
                 vfs_path = config['DEFAULT']['vfs_path']
             if 'script_path' in config['DEFAULT']:
                 script_path = config['DEFAULT']['script_path']
+            if 'root_name' in config['DEFAULT']:
+                root_name = config['DEFAULT']['root_name']
     
-    return vfs_path, script_path
+    return vfs_path, script_path, root_name
      
 
 
 if __name__ == "__main__":
     args = parse_arguments()
     
-    vfs_path, script_path = parse_config_file(args.config)
+    vfs_path, script_path, root_name = parse_config_file(args.config)
     
     # priority
     if args.vfs:
@@ -319,10 +476,10 @@ if __name__ == "__main__":
         script_path = args.script
     
     # if file is open from cmd, then it prints information in concole
-    print(f"Info: VFS path = {vfs_path}")
-    print(f"Info: Script path = {script_path}")
-    print(f"Info: Config file = {args.config}")
+#     print(f"Info: VFS path = {vfs_path}")
+#     print(f"Info: Script path = {script_path}")
+#     print(f"Info: Config file = {args.config}")
     
     root = tk.Tk()
-    cli = CommandLineInterface(root, vfs_path, script_path, args.config)
+    cli = CommandLineInterface(root, vfs_path, script_path, args.config, root_name)
     root.mainloop()
