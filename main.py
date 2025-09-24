@@ -25,6 +25,10 @@ class VFSNode:
 #         "path": "/SUB_CAT_3_fun/music.mp3",
         self.path = ""
         
+        self.permissions = None
+        if (self.type == "file"):
+            self.permissions = ['r']
+        
         if ('encoding' in node_data):
             self.encoding = node_data['encoding']
         else:
@@ -73,7 +77,8 @@ class VFSNode:
               f"parent = {self.parent}\n"+
               f"children = {self.children}\n"+
               f"content = {self.content}\n"+
-              f"metadata = {self.metadata}\n")
+              f"metadata = {self.metadata}\n"+
+              f"permissions = {self.permissions}\n")
        
        
        
@@ -187,8 +192,31 @@ class VFS:
         
         if target_file.type != 'file':
             return f"It is a directory: {path}"
-            
-        return target_file.content
+        
+        if ('r' in target_file.permissions and 'n' not in target_file.permissions):
+            return target_file.content
+        
+        return f"Check file. You might not have enough permissions"
+    
+    
+    
+    def write_file(self, path, new_content, add = False):
+        target_file = self.navigate(path)
+        if not target_file:
+            return f"File not found: {path}"
+        
+        if target_file.type != 'file':
+            return f"It is a directory: {path}"
+        
+        if ('w' in target_file.permissions and 'n' not in target_file.permissions and add):
+            target_file.content += str(new_content)
+            return f"Success! Content added: {target_file.content}\n"
+        elif ('w' in target_file.permissions and 'n' not in target_file.permissions and not add):
+            target_file.content = str(new_content)
+            return f"Success! Content written: {target_file.content}\n"
+        
+        return f"Check file. You might not have enough permissions"
+    
     
     
     def find(self, pattern):
@@ -322,99 +350,17 @@ class CommandLineInterface:
             if command:
                 # copied from exec method
                 
-                # Display the command
-                self.display_output(f">>> {command}\n")
-                
-                # split the input line into several words
-                words = [i for i in command.split()]
-                
-                # commands
-                if (command == ''):
-                    pass
-                
-                elif (words[0].lower() in ['exit', 'quit']):
-                    self.display_output("Exiting...\n")
-                    self.root.after(1000, self.root.destroy)
-                    
-                elif (words[0].lower() == "help" and len(words)==1):
-                    help_msg = ("help - to see this message\n"+
-                                "exit/quit - to stop the program\n"+
-                                "ls [path] [--a] - list directory contents, --a for more info about files in catalogue\n"+
-                                "cd <path> - change directory\n"+
-                                "find <pattern> - search files and directories with included pattern\n"+
-                                "display_short_path [false] - toggle path display\n"+
-                                "who - show user and terminal info\n"+
-                                "read <file> - get data from file\n")
-                    self.display_output(help_msg)
-                    
-                elif (words[0].lower() == 'ls'):
-                    if ('--a' in words):
-                        result = self.vfs.list_dir(command[command.find(' '):].strip(), "--a")           
-                    else:
-                        result = self.vfs.list_dir(command[command.find(' '):].strip())
-                        
-                    if isinstance(result, list): # if result.type() == list
-                        for name, type_ in result:
-                            self.display_output(f"{name} ({type_})\n")
-                    else:
-                        self.display_output(f"{result}\n")
-                
-                elif (words[0].lower() == 'read'):
-                    self.display_output(f"{self.vfs.read_file(command[command.find(' '):])}\n")
-                    
-                elif (words[0].lower() == 'cd'):
-                    path = command[command.find(' '):].strip()
-                    new_dir = self.vfs.navigate(path)
-                    
-                    if new_dir and new_dir.type == 'directory':
-                        self.vfs.current_dir = new_dir
-                        self.display_output(f"Changed directory to {new_dir.get_path(self.vfs.root_name)}\n")
-                    else:
-                        self.display_output(f"Directory not found: {path}\n")
-                    
-                    # ОБНОВЛЯЕМ ПРОМПТ ПОСЛЕ СМЕНЫ ДИРЕКТОРИИ
-                    self.update_prompt()
-                
-                elif (words[0].lower() == 'display_short_path'):
-                    if ('false' in words):
-                        self.update_prompt(False)
-                        self.display_output(f"The output changed \n")
-                    else:
-                        self.update_prompt()
-                        self.display_output(f"The output changed \n")
-                
-                elif (words[0].lower() == 'who'):
-                    self.display_output(f"Current user: {os.getlogin()} \n"
-                                        + f"Current terminal: CMD ANALOG \n"
-                                        + f"Time of accessing this terminal: {self.creation_time} \n"
-                                        + f"Time of using this terminal: {datetime.now() - self.creation_time} \n")
-                
-                elif (words[0].lower() == 'find'):
-                    if len(words) > 1:
-                        pattern = ' '.join(words[1:])
-                        results = self.vfs.find(pattern)
-                        if results:
-                            for result in results:
-                                self.display_output(f"{result}\n")
-                        else:
-                            self.display_output("No files or directories found\n")
-                    else:
-                        self.display_output("Usage: find <pattern>\n")
-                    
-                else:
-                    # stop executing in case of some troubles, as it is in the task
-                    self.display_output(f"Unknown command: {command}, the following start script cannot be done\n")
-                    return
-                        
-                words = []
+                if (self.execute_command(start_script = True, command = command)=="ERR"):
+                    self.display_output(f"The current start script cannot be done\n")
+                    break                
                 
 
 
     def execute_command(self, event=None, start_script = False, command = ""):
         # get command and clear the field
-        
-        command = self.input_field.get().strip()
-        self.input_field.delete(0, tk.END)
+        if not start_script:
+            command = self.input_field.get().strip()
+            self.input_field.delete(0, tk.END)
         
         # Display the command
         self.display_output(f">>> {command}\n")
@@ -438,9 +384,60 @@ class CommandLineInterface:
                         "find <pattern> - search files and directories with included pattern\n"+
                         "display_short_path [false] - toggle path display\n"+
                         "who - show user and terminal info\n"+
-                        "read <file> - get data from file\n")
+                        "read <path> - get data from file\n"+
+                        "write <path> <true/false> - write or add (toggle switch to true) data in file\n"+
+                        "chmod <add/rm> <path> <permission> , (permissions: r - read, w - write, n - no access. Can get only 1 at a time)\n"+
+                        "rmdir <path> - remove an empty catalogue\n")
             self.display_output(help_msg)
+        
+        elif (words[0].lower() == 'rmdir'):
+            path = words[1]
+            target_dir = self.vfs.navigate(path)
+            if target_dir:
+                if target_dir.type!="file":
+                    if target_dir.children:
+                        self.display_output("Catalogue is not empty\n")
+                    else:
+                        del target_dir.parent.children[target_dir.name]
+                        if target_dir.path in dict_all_nodes:
+                            del dict_all_nodes[target_dir.path]
+                            
+                        
+                        self.display_output(f"Directory removed: {path}")
+                else:
+                    self.display_output("Got not a catalogue\n")
+                
+            else:
+                self.display_output("Wrong path\n")
             
+            
+        elif (words[0].lower() == 'chmod'):
+            
+            if (len(words)<4):
+                self.display_output("Not enough args\n")
+                return
+            
+            sub_comm = words[1]
+            path = words[2]
+            permissions = words[3]
+            
+            file_for_work = self.vfs.navigate(path)
+            
+            if file_for_work:
+                if file_for_work.type == "file":
+                    if (sub_comm.lower() == "add" and (permissions not in file_for_work.permissions)):
+                        file_for_work.permissions.append(permissions)
+                        self.display_output("Added permissions\n")
+                    elif (sub_comm.lower() == "rm" and (permissions in file_for_work.permissions)):
+                        file_for_work.permissions.remove(permissions)
+                        self.display_output("Removed permissions\n")
+                    else:
+                        self.display_output("Got wrong arguements\n")
+                else:
+                    self.display_output("Got directory, not file\n")
+            else:
+                self.display_output("Wrong path\n")
+                
         elif (words[0].lower() == 'ls'):
             if ('--a' in words):
                 result = self.vfs.list_dir(command[command.find(' '):].strip(), "--a")           
@@ -455,6 +452,14 @@ class CommandLineInterface:
         
         elif (words[0].lower() == 'read'):
             self.display_output(f"{self.vfs.read_file(command[command.find(' '):])}\n")
+            
+        elif (words[0].lower() == 'write'):
+            path = words[1]
+            add = False
+            if words[2] == "true":
+                add = True
+            cont = ' '.join(words[3:])
+            self.display_output(f"{self.vfs.write_file(path, cont, add)}\n") #path, new_content, add = False
             
         elif (words[0].lower() == 'cd'):
             path = command[command.find(' '):].strip()
@@ -472,10 +477,9 @@ class CommandLineInterface:
         elif (words[0].lower() == 'display_short_path'):
             if ('false' in words):
                 self.update_prompt(False)
-                self.display_output(f"The output changed \n")
             else:
                 self.update_prompt()
-                self.display_output(f"The output changed \n")
+            self.display_output(f"The output changed \n")
         
         elif (words[0].lower() == 'who'):
             self.display_output(f"Current user: {os.getlogin()} \n"
@@ -497,6 +501,8 @@ class CommandLineInterface:
             
         else:               
             self.display_output(f"Unknown command: {command}\n")
+            if start_script:
+                return "ERR"
         
         words = []
     
@@ -566,10 +572,4 @@ if __name__ == "__main__":
     root = tk.Tk()
     cli = CommandLineInterface(root, vfs_path, script_path, args.config, root_name)
     root.mainloop()
-
-    
-        
-    
-
-
 
