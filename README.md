@@ -134,15 +134,15 @@
 
 
 <hr>
-<h2>Brief Description</h2>
-<p>The code creates a class that processes basic commands, creates and draws a window for interacting with the system, and contains methods for displaying program messages.</p>
-<p>The repository stores startup files for working with the program. These include configuration files (config2task.ini and config3task.ini), a file with startup commands (vfs_start_script.txt), a file with the virtual file system file organization (vfs_struct_file.txt), a file with commands that will not be executed to completion because one of the task conditions demonstrates this (vfs_start_script_w_bugs.txt), a file for task 3 with the vfs structure (vfs.json), a file for creating vfs.json (json_former.py), and files for testing the code (TESTS_task_2.bat and TESTS_task_3.bat).</p>
-<p>For testing task 4, use the files from task 3.</p>
-<p>Please store these files in the same directory as your code to avoid unnecessary problems. Just in case, you've been warned :)</p>
-<p>When running the test file (.bat), make sure the filename containing the code matches the filename in the test file. You can do this using Notepad.</p>
-<p>Also, please take into account the vfs structure described in the .json file. When testing and creating your own structure, you should rely on existing "tags."</p>
+<h2>Short description</h2>
+<p>The code has created a class in which the simplest commands are processed, a window is created and drawn for interacting with the system, and methods for outputting messages from the program.</p>
+<p>The repository stores the startup files for possible work with the program. Among them are configuration files (config2task.ini, config3task.ini and config4task.ini), a file with startup commands (vfs_start_script.txt ), a file with the organization of virtual file system files (vfs_struct_file.txt ), a command file that will not run to the end, as this will demonstrate one of the conditions of the task (vfs_start_script_w_bugs.txt ), file for 3-5 tasks with a vfs structure (vfs.json), a file for creating a vfs.json (json_former.py ), files for the code test (TESTS_task_2.bat and TESTS_task_3.bat).</p>
+<p>For the 5 task tests, use vfs files.json, vfs_start_script_w_bugs.txt, vfs_start_script.txt, TESTS_task_3.bat, config4task.ini.</p>
+<p>Please keep these files in the same directory as the code so that there are no unnecessary problems. If anything, you've been warned :)</p>
+<p>When running the test file (.bat) make sure that the file name with the code matches the file name in the test file. This can be done through Notepad.</p>
+<p>I also ask you to take into account the vfs structure described in .a json file. When testing and creating your own structure, you need to rely on existing "tags".</p>
 
-<h2>CommandLineInterface Class Methods</h2>
+<h2>Methods of the CommandLineInterface class</h2>
 <ol>
 <li>__init__</li>
 <li>display_welcome</li>
@@ -155,44 +155,44 @@
 </ol>
 <hr>
 <h3>__init__</h3>
-<p>Renders the interaction window, text input and output fields, and the workspace title. Initializes the VFS and loads the startup script.</p>
+<p>Renders the interaction window, text input and output fields, and the workspace title. Initializes the VFS, loads the startup script.</p>
 
 <h3>display_welcome</h3>
-<p>Displays the program's welcome message using display_output.</p>
+<p>Displays the welcome message of the program using display_output.</p>
 
 <h3>display_output</h3>
-<p>Displays the program's work on the screen. Temporarily enables the text widget, inserts text, scrolls to the end, and disables the widget again.</p>
+<p>Displaying the program on the screen. Temporarily enables the text widget, inserts the text, scrolls to the end, and disables the widget again.</p>
 
 <h3>execute_start_script</h3>
-<p>Displays the program's work processing commands from an external file with startup commands.</p>
+<p>Displaying the program for processing commands from an external file with the start commands.</p>
 
 <h3>display_config</h3>
-<p>Displays information about the configuration file and its contents.</p>
+<p>Displays information about the configuration and its contents.</p>
 
 <h3>execute_command</h3>
-<p>Command handler. Currently available:</p>
+<p>The command handler. Available now:</p>
 <ol>
-<li>exit/quit - exit the program</li>
-<li>ls [path] [--a] - list directory contents (--a for details)</li>
-<li>cd path - change directory</li>
-<li>read file - read file contents</li>
-<li>write path true/false content - write or append data to a file</li>
-<li>find pattern - search for files and directories by pattern</li>
-<li>display_short_path [false] - toggle path display</li>
-<li>who - user and terminal information</li>
-<li>help - command help</li>
-<li>chmod add/rm path permission - manage file access rights</li>
-<li>rmdir path - delete empty Directories</li>
+<li>exit/quit - program termination</li>
+<li>ls [path] [--a] - list of directory contents (--a for details)</li>
+<li>cd path - directory change</li>
+<li>read file - reading the contents of a file</li>
+<li>write path true/false content - write or add data to a file</li>
+<li>find pattern - search for files and directories using a template</li>
+<li>display_short_path [false] - switching the path display</li>
+<li>who - information about the user and the terminal</li>
+<li>help - help on commands</li>
+<li>chmod add/rm path permission - file access rights management</li>
+<li>rmdir path - deleting an empty directory</li>
 </ol>
 
 <h3>get_current_prompt</h3>
 <p>Returns the current path to display in the command prompt.</p>
 
 <h3>update_prompt</h3>
-<p>Updates the command prompt.</p>
+<p>Updates the display of the command prompt.</p>
 
 <hr>
-<h2>VFS Class Methods</h2>
+<h2>Methods of the VFS class</h2>
 <ol>
 <li>__init__</li>
 <li>load_vfs_from_json</li>
@@ -205,31 +205,31 @@
 </ol>
 <hr>
 <h3>__init__</h3>
-<p>Constructor, creates root VFS.</p>
+<p>The constructor creates the VFS root.</p>
 
 <h3>load_vfs_from_json</h3>
-<p>Opens a .json file and calls the build_vfs_tree method to build a VFS hierarchy.</p>
+<p>Opens it .a json file and calls the build_vfs_tree method to build the vfs hierarchy.</p>
 
 <h3>build_vfs_tree</h3>
-<p>This method recursively loops through all nodes in the .json file and creates them depending on their type—directory or file. It also appends child files to their parent. Saves nodes to the global dictionary dict_all_nodes.</p>
+<p>The method traverses recursively through all nodes in .a json file and creates them, depending on their type - directory or file. It also adds child files to the parent files. Saves nodes to the global dict_all_nodes dictionary.</p>
 
 <h3>navigate</h3>
-<p>Navigates the VFS. Supports absolute and relative paths, special cases (., .., root).</p>
+<p>VFS navigation. Supports absolute and relative paths, special cases (., .., root).</p>
 
 <h3>list_dir</h3>
-<p>Displays the contents of a directory. With the --a modifier, displays detailed file information.</p>
+<p>Outputs the contents of the directory. With the --a modifier, it shows detailed information about files.</p>
 
 <h3>read_file</h3>
-<p>Reads the contents of a file from the VFS.</p>
+<p>Reads the contents of the file from VFS.</p>
 
 <h3>write_file</h3>
-<p>Writes or appends contents to a VFS file, checking access rights.</p>
+<p>Writes or adds content to a VFS file with access verification.</p>
 
 <h3>find</h3>
-<p>Search for files and directories based on a pattern in their names.</p>
+<p>Search for files and directories by the template in the name.</p>
 
 <hr>
-<h2>VFSNode Class Methods</h2>
+<h2>Methods of the VFSNode class</h2>
 <ol>
 <li>__init__</li>
 <li>add_child</li>
@@ -238,28 +238,27 @@
 </ol>
 <hr>
 <h3>__init__</h3>
-<p>Constructor; creates a VFS element, defining most of the fields directly from the input data. Supports base64 decoding of content.</p>
+<p>The constructor creates a vfs element by defining most of the fields directly from the input data. Supports base64 content decoding.</p>
 
 <h3>add_child</h3>
 <p>Adds a child node and establishes a parent relationship.</p>
 
 <h3>get_path</h3>
-<p>Returns the path to the object if one is not specified in the .json file. Builds the path based on the parent hierarchy.</p>
+<p>Returns the path to the object, if none was specified in .a json file. Builds a path based on the parent hierarchy.</p>
 
 <h3>display_data</h3>
-<p>Returns a string with detailed information about a file or directory.</p>
+<p>Returns a string with detailed information about the file or directory.</p>
 
 <hr>
-<h2>Additional Functions</h2>
+<h2>Additional functions</h2>
 <ol>
 <li>parse_arguments</li>
 <li>parse_config_file</li>
 </ol>
 <hr>
 <h3>parse_arguments</h3>
-<p>A function for receiving arguments from the OS command line and passing them to a program. Supports the following arguments: --vfs, --script, --config, --root_name.</p>
+<p>A function for receiving arguments from the OS command line and transferring them to the program. Supports arguments: --vfs, --script, --config, --root_name.</p>
 
 <h3>parse_config_file</h3>
-<p>A function for reading basic values ​​from a configuration file - config.ini by default. This file is included with others in this repository. Reads parameters from the [DEFAULT] section.</p>
-<hr>
+<p>The function for reading basic values from the config file is config.ini by default. This file goes along with others in this repository. Reads parameters from the [DEFAULT] section.</p>
 
