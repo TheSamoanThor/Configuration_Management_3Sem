@@ -8,6 +8,11 @@
       "name": "SUB_CAT_1_office",
       "path": "/SUB_CAT_1_office",
       "children": [
+	{
+          "type": "directory",
+          "name": "EMPTY_CAT",
+          "path": "/SUB_CAT_1_office/EMPTY_CAT"
+        },
         {
           "type": "file",
           "name": "file1.txt",
